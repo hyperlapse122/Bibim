@@ -40,6 +40,8 @@ internal class DiscordAudioBackgroundService(
                     childTokenSource.CancelAfter(TimeSpan.FromMinutes(2));
                     var item = await queueService.DequeueAsync(channel.Id, childTokenSource.Token);
 
+                    var msg = await channel.SendMessageAsync($"Loading `{item.DisplayName}`...");
+
                     await using var stream = await item.GetAudioStreamAsync(stoppingToken);
 
                     if (OperatingSystem.IsMacOS())
@@ -51,7 +53,7 @@ internal class DiscordAudioBackgroundService(
                         continue;
                     }
 
-                    await channel.SendMessageAsync($"Now playing: {item.DisplayName}");
+                    await channel.ModifyMessageAsync(msg.Id, x => x.Content = $"Playing `{item.DisplayName}`...");
 
                     await using var bufferStream = new MemoryStream();
 

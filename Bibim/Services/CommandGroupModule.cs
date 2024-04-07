@@ -3,17 +3,13 @@ using Discord.Interactions;
 using HyperLapse.Bibim.Service.Abstractions.Interfaces;
 using HyperLapse.Bibim.Service.Discord.Services;
 using HyperLapse.Bibim.Service.YouTube.Services;
+using HyperLapse.Bibim.Service.YoutubeDL.Service;
 
 namespace Bibim.Services;
 
 // You can put commands in groups
 [Group("group-name", "Group description")]
-public class CommandGroupModule(
-    ILogger<CommandGroupModule> logger,
-    DiscordAudioService audioService,
-    YouTubeAudioQueueService youTubeAudioQueueService,
-    IAudioQueueService queueService
-)
+public class CommandGroupModule(IAudioQueueService queueService)
     : InteractionModuleBase<SocketInteractionContext>
 {
     // This command will look like
@@ -24,36 +20,6 @@ public class CommandGroupModule(
         await RespondAsync("Pong!");
     }
 
-    // The command's Run Mode MUST be set to RunMode.Async, otherwise, being connected to a voice channel will block the gateway thread.
-    [SlashCommand("yt", "Play YouTube audio", runMode: RunMode.Async, ignoreGroupNames: true)]
-    public async Task YouTube(string url)
-    {
-        if ((Context.User as IGuildUser)?.VoiceChannel is not { } channel)
-        {
-            await RespondAsync(
-                "User must be in a voice channel, or a voice channel must be passed as an argument."
-            );
-            return;
-        }
-
-        try
-        {
-            var item = await youTubeAudioQueueService.Enqueue(channel.Id, url);
-
-            audioService.EnsureAudioServiceCreated(channel);
-            await RespondAsync(
-                $"YouTube Video `{item.DisplayName}` has been added to the queue. It will be played soon.");
-        }
-        catch (Exception e)
-        {
-            logger.LogError(e, "An error occurred while trying to play YouTube audio.");
-#if DEBUG
-            await RespondAsync($"An error occurred: {e.Message}");
-#else
-            await RespondAsync("An error occurred while trying to play YouTube audio.");
-#endif
-        }
-    }
 
     [SlashCommand("nextup", "Show the next up audio", runMode: RunMode.Async, ignoreGroupNames: true)]
     public async Task NextUp()
