@@ -18,17 +18,20 @@ internal class DiscordAudioBackgroundService(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        IsRunning = true;
+        using var audioClient = await channel.ConnectAsync();
+
         try
         {
-            IsRunning = true;
-            using var audioClient = await channel.ConnectAsync();
-
             // Create Audio Stream (macOS is not supported)
             await using Stream audioStream = OperatingSystem.IsMacOS()
                 ? new MemoryStream()
                 : audioClient.CreatePCMStream(AudioApplication.Music, null, 1000, 20);
 
-            while (!stoppingToken.IsCancellationRequested)
+            while (true)
+            {
+                if (stoppingToken.IsCancellationRequested) break;
+
                 try
                 {
                     var childTokenSource = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
@@ -57,7 +60,7 @@ internal class DiscordAudioBackgroundService(
                     await using var writeStream = writer.AsStream();
 
                     var reader = pipe.Reader;
-                    var t2 = reader.CopyToAsync(audioStream, stoppingToken);
+                    _ = reader.CopyToAsync(audioStream, stoppingToken);
 
                     await Cli.Wrap("ffmpeg")
                         .WithArguments(
@@ -75,6 +78,7 @@ internal class DiscordAudioBackgroundService(
                     await channel.SendMessageAsync("There was no item in the queue for 2 minutes. Disconnecting...");
                     return;
                 }
+            }
         }
         catch (Exception e)
         {
