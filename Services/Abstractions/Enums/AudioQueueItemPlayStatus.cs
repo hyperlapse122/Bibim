@@ -6,6 +6,11 @@ namespace HyperLapse.Bibim.Service.Abstractions.Enums;
 public enum AudioQueueItemPlayStatus
 {
     /// <summary>
+    ///     Represents the status of the audio queue item when it is enqueued.
+    /// </summary>
+    Enqueued,
+
+    /// <summary>
     ///     Represents the status of the audio queue item when it is stopped.
     /// </summary>
     Stopped,

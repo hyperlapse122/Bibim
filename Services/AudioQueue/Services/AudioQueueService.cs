@@ -5,7 +5,7 @@ namespace HyperLapse.Bibim.Service.AudioQueue.Services;
 
 internal class AudioQueueService : IAudioQueueService
 {
-    private readonly Dictionary<long, Channel<IAudioQueueItem>> _channel = new();
+    private readonly Dictionary<ulong, Channel<IAudioQueueItem>> _channel = new();
 
     private readonly BoundedChannelOptions _options = new(100)
     {
@@ -14,27 +14,29 @@ internal class AudioQueueService : IAudioQueueService
         FullMode = BoundedChannelFullMode.Wait
     };
 
-    public async Task EnqueueAsync(long channelId, IAudioQueueItem item, CancellationToken cancellationToken = default)
+    public async Task EnqueueAsync(ulong channelId, IAudioQueueItem item, CancellationToken cancellationToken = default)
     {
         await GetChannel(channelId).Writer.WriteAsync(item, cancellationToken);
     }
 
-    public Task<IAudioQueueItem?> PeekAsync(long channelId, CancellationToken cancellationToken = default)
+    public Task<IAudioQueueItem?> PeekAsync(ulong channelId, CancellationToken cancellationToken = default)
     {
-        throw new NotSupportedException();
+        return GetChannel(channelId).Reader.TryPeek(out var item)
+            ? Task.FromResult<IAudioQueueItem?>(item)
+            : Task.FromResult<IAudioQueueItem?>(null);
     }
 
-    public async Task<IAudioQueueItem> DequeueAsync(long channelId, CancellationToken cancellationToken = default)
+    public async Task<IAudioQueueItem> DequeueAsync(ulong channelId, CancellationToken cancellationToken = default)
     {
         return await GetChannel(channelId).Reader.ReadAsync(cancellationToken);
     }
 
-    public Task<IAudioQueueItem> RemoveFromQueueAsync(long channelId, CancellationToken cancellationToken = default)
+    public Task<IAudioQueueItem> RemoveFromQueueAsync(ulong channelId, CancellationToken cancellationToken = default)
     {
         throw new NotSupportedException();
     }
 
-    private Channel<IAudioQueueItem> GetChannel(long channelId)
+    private Channel<IAudioQueueItem> GetChannel(ulong channelId)
     {
         if (_channel.TryGetValue(channelId, out var channel)) return channel;
 

@@ -8,7 +8,6 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddAudioQueue(this IServiceCollection services)
     {
-        return services
-            .AddSingleton<IAudioQueueService, AudioQueueService>();
+        return services.AddSingleton<IAudioQueueService, AudioQueueService>();
     }
 }

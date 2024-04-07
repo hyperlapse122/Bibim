@@ -16,7 +16,9 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Bibim/Bibim.csproj", "Bibim/"]
 COPY ["Services/Abstractions/Abstractions.csproj", "Services/Abstractions/"]
+COPY ["Services/Discord/Discord.csproj", "Services/Discord/"]
 COPY ["Services/AudioQueue/AudioQueue.csproj", "Services/AudioQueue/"]
+COPY ["Services/YouTube/YouTube.csproj", "Services/YouTube/"]
 RUN dotnet restore "Bibim/Bibim.csproj"
 COPY . .
 WORKDIR "/src/Bibim"
