@@ -4,7 +4,8 @@ WORKDIR /app
 
 USER root
 RUN apt-get update && apt-get install -y libopus-dev libsodium-dev ffmpeg \
-    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/lib/apt/lists/*
+
 USER $APP_UID
 
 EXPOSE 8080
@@ -14,6 +15,8 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Bibim/Bibim.csproj", "Bibim/"]
+COPY ["Services/Abstractions/Abstractions.csproj", "Services/Abstractions/"]
+COPY ["Services/AudioQueue/AudioQueue.csproj", "Services/AudioQueue/"]
 RUN dotnet restore "Bibim/Bibim.csproj"
 COPY . .
 WORKDIR "/src/Bibim"
@@ -29,9 +32,12 @@ WORKDIR /app
 
 COPY --from=publish /app/publish .
 
+USER root
 RUN mkdir -p /app/bin/Debug/net8.0 \
-    && cp /usr/lib/aarch64-linux-gnu/libopus.so.0 /app/libopus.so \
-    && cp /usr/lib/aarch64-linux-gnu/libopus.so.0.8.0 /app/libopus.so.0.8.0
+    && cp /usr/lib/$(uname -m)-linux-gnu/libopus.so.0 /app/libopus.so \
+    && cp /usr/lib/$(uname -m)-linux-gnu/libopus.so.0.8.0 /app/libopus.so.0.8.0
 # RUN cp /usr/lib/x86_64-linux-gnu/libopus.so.0 libopus.so
+
+USER $APP_UID
 
 ENTRYPOINT ["dotnet", "Bibim.dll"]

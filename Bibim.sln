@@ -2,6 +2,12 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bibim", "Bibim\Bibim.csproj", "{0DB9BDB0-17AC-4083-90EC-6B087EE26ECF}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{2DC4130B-5C93-4944-912C-6DBAF063E82B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Abstractions", "Services\Abstractions\Abstractions.csproj", "{62EC6029-E67F-477F-BD2B-39AA100D96EB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AudioQueue", "Services\AudioQueue\AudioQueue.csproj", "{BA4106F4-A597-429E-802B-8D5D1FD65B16}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +18,17 @@ Global
 		{0DB9BDB0-17AC-4083-90EC-6B087EE26ECF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0DB9BDB0-17AC-4083-90EC-6B087EE26ECF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0DB9BDB0-17AC-4083-90EC-6B087EE26ECF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{62EC6029-E67F-477F-BD2B-39AA100D96EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62EC6029-E67F-477F-BD2B-39AA100D96EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62EC6029-E67F-477F-BD2B-39AA100D96EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62EC6029-E67F-477F-BD2B-39AA100D96EB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA4106F4-A597-429E-802B-8D5D1FD65B16}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA4106F4-A597-429E-802B-8D5D1FD65B16}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA4106F4-A597-429E-802B-8D5D1FD65B16}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA4106F4-A597-429E-802B-8D5D1FD65B16}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{62EC6029-E67F-477F-BD2B-39AA100D96EB} = {2DC4130B-5C93-4944-912C-6DBAF063E82B}
+		{BA4106F4-A597-429E-802B-8D5D1FD65B16} = {2DC4130B-5C93-4944-912C-6DBAF063E82B}
 	EndGlobalSection
 EndGlobal

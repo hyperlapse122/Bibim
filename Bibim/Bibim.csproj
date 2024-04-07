@@ -23,4 +23,9 @@
         </Content>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Services\Abstractions\Abstractions.csproj" />
+      <ProjectReference Include="..\Services\AudioQueue\AudioQueue.csproj" />
+    </ItemGroup>
+
 </Project>
