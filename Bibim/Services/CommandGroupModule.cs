@@ -28,8 +28,7 @@ public class CommandGroupModule(
     [SlashCommand("yt", "Play YouTube audio", runMode: RunMode.Async, ignoreGroupNames: true)]
     public async Task YouTube(string url)
     {
-        var channel = (Context.User as IGuildUser)?.VoiceChannel;
-        if (channel == null)
+        if ((Context.User as IGuildUser)?.VoiceChannel is not { } channel)
         {
             await RespondAsync(
                 "User must be in a voice channel, or a voice channel must be passed as an argument."
@@ -37,10 +36,10 @@ public class CommandGroupModule(
             return;
         }
 
-        await youTubeAudioQueueService.Enqueue(channel.Id, url);
+        var item = await youTubeAudioQueueService.Enqueue(channel.Id, url);
 
         audioService.EnsureAudioServiceCreated(channel);
-        await RespondAsync("YouTube Video has been added to the queue. It will be played soon.");
+        await RespondAsync($"YouTube Video `{item.DisplayName}` has been added to the queue. It will be played soon.");
     }
 
     [SlashCommand("nextup", "Show the next up audio", runMode: RunMode.Async, ignoreGroupNames: true)]
