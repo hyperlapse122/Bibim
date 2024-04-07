@@ -1,3 +1,4 @@
+using System.IO.Pipelines;
 using CliWrap;
 using Discord;
 using Discord.Audio;
@@ -17,25 +18,29 @@ internal class DiscordAudioBackgroundService(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        IsRunning = true;
+        using var audioClient = await channel.ConnectAsync();
+
         try
         {
-            IsRunning = true;
-            using var audioClient = await channel.ConnectAsync();
-
             // Create Audio Stream (macOS is not supported)
             await using Stream audioStream = OperatingSystem.IsMacOS()
                 ? new MemoryStream()
                 : audioClient.CreatePCMStream(AudioApplication.Music, null, 1000, 20);
 
-            while (!stoppingToken.IsCancellationRequested)
+            while (true)
             {
+                if (stoppingToken.IsCancellationRequested) break;
+
                 try
                 {
                     var childTokenSource = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
                     // If there is no item in the queue, it will wait for 2 minutes.
                     // If there is no item in the queue for 2 minutes, it will cancel the operation and disconnect the audio client.
                     childTokenSource.CancelAfter(TimeSpan.FromMinutes(2));
-                    var item = await queueService.DequeueAsync(channel.Id, cancellationToken: childTokenSource.Token);
+                    var item = await queueService.DequeueAsync(channel.Id, childTokenSource.Token);
+
+                    var msg = await channel.SendMessageAsync($"Loading `{item.DisplayName}`...");
 
                     await using var stream = await item.GetAudioStreamAsync(stoppingToken);
 
@@ -48,26 +53,27 @@ internal class DiscordAudioBackgroundService(
                         continue;
                     }
 
-                    var msg = await channel.SendMessageAsync(
-                        $"{item.DisplayName} will be played after optimizing and buffering...");
+                    await channel.ModifyMessageAsync(msg.Id, x => x.Content = $"Playing `{item.DisplayName}`...");
 
                     await using var bufferStream = new MemoryStream();
 
+                    var pipe = new Pipe();
+                    var writer = pipe.Writer;
+                    await using var writeStream = writer.AsStream();
+
+                    var reader = pipe.Reader;
+                    _ = reader.CopyToAsync(audioStream, stoppingToken);
+
                     await Cli.Wrap("ffmpeg")
                         .WithArguments(
-                            "-hide_banner -i pipe:0 -af loudnorm=I=-36:TP=-2:LRA=7:print_format=json -ac 2 -f s16le -ar 48000 pipe:1")
+                            "-hide_banner -i pipe:0 -af loudnorm=I=-36:TP=-2:LRA=7:print_format=json -ac 2 -f s16le -ar 48000 pipe:1"
+                        )
                         .WithStandardInputPipe(PipeSource.FromStream(stream))
-                        .WithStandardOutputPipe(PipeTarget.ToStream(bufferStream))
+                        .WithStandardOutputPipe(PipeTarget.ToStream(writeStream))
                         .WithStandardErrorPipe(PipeTarget.ToDelegate(e => logger.LogInformation("{message}", e)))
-                        .ExecuteAsync(cancellationToken: stoppingToken);
-                    await bufferStream.FlushAsync(stoppingToken);
-                    bufferStream.Seek(0, SeekOrigin.Begin);
+                        .ExecuteAsync(stoppingToken);
 
-                    var text = $"Playing {item.DisplayName}...";
-                    await channel.ModifyMessageAsync(msg.Id, properties => { properties.Content = text; });
-
-                    await bufferStream.CopyToAsync(audioStream, stoppingToken);
-                    await audioStream.FlushAsync(stoppingToken);
+                    // await Task.WhenAll(t1, t2);
                 }
                 catch (TaskCanceledException)
                 {

@@ -9,13 +9,20 @@ public class DiscordAudioService(ILogger<DiscordAudioService> logger, IAudioQueu
 {
     private readonly Dictionary<ulong, DiscordAudioBackgroundService> _backgroundServices = new();
 
+    public Task StartAsync(CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
+
+    public async Task StopAsync(CancellationToken cancellationToken)
+    {
+        await Task.WhenAll(_backgroundServices.Values.Select(e => e.StopAsync(cancellationToken)));
+    }
+
     private DiscordAudioBackgroundService GetService(IVoiceChannel channel,
         CancellationToken cancellationToken = default)
     {
-        if (_backgroundServices.TryGetValue(channel.Id, out var service) && service.IsRunning)
-        {
-            return service;
-        }
+        if (_backgroundServices.TryGetValue(channel.Id, out var service) && service.IsRunning) return service;
 
         service = new DiscordAudioBackgroundService(channel, queueService, logger);
         service.StartAsync(cancellationToken);
@@ -27,15 +34,5 @@ public class DiscordAudioService(ILogger<DiscordAudioService> logger, IAudioQueu
     public void EnsureAudioServiceCreated(IVoiceChannel channel, CancellationToken cancellationToken = default)
     {
         GetService(channel, cancellationToken);
-    }
-
-    public Task StartAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
-
-    public async Task StopAsync(CancellationToken cancellationToken)
-    {
-        await Task.WhenAll(_backgroundServices.Values.Select(e => e.StopAsync(cancellationToken)));
     }
 }

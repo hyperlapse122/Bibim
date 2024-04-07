@@ -1,3 +1,4 @@
+using Bibim.Groups;
 using Bibim.Models;
 using Discord;
 using Discord.Interactions;
@@ -53,8 +54,10 @@ public class DiscordHostedService(
     {
         try
         {
-            var module = await interactionService.AddModuleAsync<CommandGroupModule>(serviceProvider);
-            await interactionService.AddModulesGloballyAsync(false, module);
+            var module1 = await interactionService.AddModuleAsync<CommandGroupModule>(serviceProvider);
+            var module2 = await interactionService.AddModuleAsync<YouTubeGroup>(serviceProvider);
+            var module3 = await interactionService.AddModuleAsync<SoundcloudModule>(serviceProvider);
+            await interactionService.AddModulesGloballyAsync(false, module1, module2, module3);
 #if DEBUG
             await interactionService.RegisterCommandsToGuildAsync(1066307284822659072);
 #else

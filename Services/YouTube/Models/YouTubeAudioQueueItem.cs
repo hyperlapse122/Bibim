@@ -4,7 +4,7 @@ using YoutubeExplode;
 using YoutubeExplode.Videos;
 using YoutubeExplode.Videos.Streams;
 
-namespace HyperLapse.Bibim.Service.YouTube;
+namespace HyperLapse.Bibim.Service.YouTube.Models;
 
 internal class YouTubeAudioQueueItem(
     YoutubeClient client,
