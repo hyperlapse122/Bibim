@@ -37,16 +37,19 @@ internal class DiscordAudioBackgroundService(
                     childTokenSource.CancelAfter(TimeSpan.FromMinutes(2));
                     var item = await queueService.DequeueAsync(channel.Id, cancellationToken: childTokenSource.Token);
 
-                    await channel.SendMessageAsync($"{item.DisplayName} will be played");
-
                     await using var stream = await item.GetAudioStreamAsync(stoppingToken);
 
                     if (OperatingSystem.IsMacOS())
                     {
-                        logger.LogWarning("macOS is not supported. Skipping audio processing and waiting 10 seconds.");
+                        const string t = "macOS is not supported. Skipping playing and waiting 10 seconds.";
+                        logger.LogWarning("{message}", t);
+                        await channel.SendMessageAsync(t);
                         await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
                         continue;
                     }
+
+                    var msg = await channel.SendMessageAsync(
+                        $"{item.DisplayName} will be played after optimizing and buffering...");
 
                     await using var bufferStream = new MemoryStream();
 
@@ -60,16 +63,16 @@ internal class DiscordAudioBackgroundService(
                     await bufferStream.FlushAsync(stoppingToken);
                     bufferStream.Seek(0, SeekOrigin.Begin);
 
+                    var text = $"Playing {item.DisplayName}...";
+                    await channel.ModifyMessageAsync(msg.Id, properties => { properties.Content = text; });
+
                     await bufferStream.CopyToAsync(audioStream, stoppingToken);
                     await audioStream.FlushAsync(stoppingToken);
                 }
                 catch (TaskCanceledException)
                 {
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, "");
+                    await channel.SendMessageAsync("There was no item in the queue for 2 minutes. Disconnecting...");
+                    return;
                 }
             }
         }

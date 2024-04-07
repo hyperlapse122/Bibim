@@ -1,5 +1,6 @@
 using Discord;
 using Discord.Interactions;
+using HyperLapse.Bibim.Service.Abstractions.Interfaces;
 using HyperLapse.Bibim.Service.Discord.Services;
 using HyperLapse.Bibim.Service.YouTube;
 
@@ -10,7 +11,8 @@ namespace Bibim.Services;
 public class CommandGroupModule(
     ILogger<CommandGroupModule> logger,
     DiscordAudioService audioService,
-    YouTubeAudioQueueService youTubeAudioQueueService
+    YouTubeAudioQueueService youTubeAudioQueueService,
+    IAudioQueueService queueService
 )
     : InteractionModuleBase<SocketInteractionContext>
 {
@@ -39,6 +41,28 @@ public class CommandGroupModule(
 
         audioService.EnsureAudioServiceCreated(channel);
         await RespondAsync("YouTube Video has been added to the queue. It will be played soon.");
+    }
+
+    [SlashCommand("nextup", "Show the next up audio", runMode: RunMode.Async, ignoreGroupNames: true)]
+    public async Task NextUp()
+    {
+        var channel = (Context.User as IGuildUser)?.VoiceChannel;
+        if (channel == null)
+        {
+            await RespondAsync(
+                "User must be in a voice channel, or a voice channel must be passed as an argument."
+            );
+            return;
+        }
+
+        var nextUp = await queueService.PeekAsync(channel.Id);
+        if (nextUp == null)
+        {
+            await RespondAsync("There is no audio in the queue.");
+            return;
+        }
+
+        await RespondAsync($"Next up: {nextUp.DisplayName}");
     }
 
 
