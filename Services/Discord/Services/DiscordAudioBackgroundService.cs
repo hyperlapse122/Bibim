@@ -48,31 +48,27 @@ internal class DiscordAudioBackgroundService(
                         continue;
                     }
 
-                    var msg = await channel.SendMessageAsync(
-                        $"{item.DisplayName} will be played after optimizing and buffering...");
+                    await channel.SendMessageAsync($"Now playing: {item.DisplayName}");
 
                     await using var bufferStream = new MemoryStream();
 
                     var pipe = new Pipe();
                     var writer = pipe.Writer;
-                    var reader = pipe.Reader;
+                    await using var writeStream = writer.AsStream();
 
-                    var t1 = Cli.Wrap("ffmpeg")
+                    var reader = pipe.Reader;
+                    var t2 = reader.CopyToAsync(audioStream, stoppingToken);
+
+                    await Cli.Wrap("ffmpeg")
                         .WithArguments(
                             "-hide_banner -i pipe:0 -af loudnorm=I=-36:TP=-2:LRA=7:print_format=json -ac 2 -f s16le -ar 48000 pipe:1"
                         )
                         .WithStandardInputPipe(PipeSource.FromStream(stream))
-                        .WithStandardOutputPipe(PipeTarget.ToStream(writer.AsStream()))
+                        .WithStandardOutputPipe(PipeTarget.ToStream(writeStream))
                         .WithStandardErrorPipe(PipeTarget.ToDelegate(e => logger.LogInformation("{message}", e)))
                         .ExecuteAsync(stoppingToken);
 
-                    var t2 = reader.CopyToAsync(audioStream, stoppingToken);
-                    await Task.WhenAll(t1, t2);
-
-                    var text = $"Playing {item.DisplayName}...";
-                    await channel.ModifyMessageAsync(msg.Id, properties => { properties.Content = text; });
-
-                    await audioStream.FlushAsync(stoppingToken);
+                    // await Task.WhenAll(t1, t2);
                 }
                 catch (TaskCanceledException)
                 {
