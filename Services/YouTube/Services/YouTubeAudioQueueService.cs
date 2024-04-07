@@ -1,8 +1,9 @@
 using HyperLapse.Bibim.Service.Abstractions.Interfaces;
+using HyperLapse.Bibim.Service.YouTube.Models;
 using YoutubeExplode;
 using YoutubeExplode.Videos;
 
-namespace HyperLapse.Bibim.Service.YouTube;
+namespace HyperLapse.Bibim.Service.YouTube.Services;
 
 public class YouTubeAudioQueueService(YoutubeClient client, IAudioQueueService audioQueueService)
 {

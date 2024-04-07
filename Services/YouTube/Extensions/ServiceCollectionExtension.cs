@@ -1,7 +1,8 @@
+using HyperLapse.Bibim.Service.YouTube.Services;
 using Microsoft.Extensions.DependencyInjection;
 using YoutubeExplode;
 
-namespace HyperLapse.Bibim.Service.YouTube;
+namespace HyperLapse.Bibim.Service.YouTube.Extensions;
 
 public static class ServiceCollectionExtension
 {

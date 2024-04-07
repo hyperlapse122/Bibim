@@ -2,7 +2,7 @@ using Discord;
 using Discord.Interactions;
 using HyperLapse.Bibim.Service.Abstractions.Interfaces;
 using HyperLapse.Bibim.Service.Discord.Services;
-using HyperLapse.Bibim.Service.YouTube;
+using HyperLapse.Bibim.Service.YouTube.Services;
 
 namespace Bibim.Services;
 
@@ -36,10 +36,23 @@ public class CommandGroupModule(
             return;
         }
 
-        var item = await youTubeAudioQueueService.Enqueue(channel.Id, url);
+        try
+        {
+            var item = await youTubeAudioQueueService.Enqueue(channel.Id, url);
 
-        audioService.EnsureAudioServiceCreated(channel);
-        await RespondAsync($"YouTube Video `{item.DisplayName}` has been added to the queue. It will be played soon.");
+            audioService.EnsureAudioServiceCreated(channel);
+            await RespondAsync(
+                $"YouTube Video `{item.DisplayName}` has been added to the queue. It will be played soon.");
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "An error occurred while trying to play YouTube audio.");
+#if DEBUG
+            await RespondAsync($"An error occurred: {e.Message}");
+#else
+            await RespondAsync("An error occurred while trying to play YouTube audio.");
+#endif
+        }
     }
 
     [SlashCommand("nextup", "Show the next up audio", runMode: RunMode.Async, ignoreGroupNames: true)]

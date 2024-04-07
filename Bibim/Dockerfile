@@ -3,7 +3,7 @@
 WORKDIR /app
 
 USER root
-RUN apt-get update && apt-get install -y libopus-dev libsodium-dev ffmpeg \
+RUN apt-get update && apt-get install -y libopus-dev libsodium-dev ffmpeg yt-dlp \
     && rm -rf /var/lib/apt/lists/*
 
 USER $APP_UID
@@ -19,6 +19,7 @@ COPY ["Services/Abstractions/Abstractions.csproj", "Services/Abstractions/"]
 COPY ["Services/Discord/Discord.csproj", "Services/Discord/"]
 COPY ["Services/AudioQueue/AudioQueue.csproj", "Services/AudioQueue/"]
 COPY ["Services/YouTube/YouTube.csproj", "Services/YouTube/"]
+COPY ["Services/YoutubeDL/YoutubeDL.csproj", "Services/YoutubeDL/"]
 RUN dotnet restore "Bibim/Bibim.csproj"
 COPY . .
 WORKDIR "/src/Bibim"

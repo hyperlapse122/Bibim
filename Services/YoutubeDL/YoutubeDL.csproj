@@ -5,16 +5,16 @@
         <LangVersion>latest</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <AssemblyName>HyperLapse.Bibim.Service.AudioQueue</AssemblyName>
-        <RootNamespace>HyperLapse.Bibim.Service.AudioQueue</RootNamespace>
+        <AssemblyName>HyperLapse.Bibim.Service.YoutubeDL</AssemblyName>
+        <RootNamespace>HyperLapse.Bibim.Service.YoutubeDL</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.1"/>
+        <ProjectReference Include="..\Abstractions\Abstractions.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Abstractions\Abstractions.csproj"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0"/>
     </ItemGroup>
 
 </Project>

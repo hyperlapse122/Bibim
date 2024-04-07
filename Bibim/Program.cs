@@ -2,7 +2,8 @@ using Bibim.Extensions;
 using Bibim.Models;
 using HyperLapse.Bibim.Service.AudioQueue.Extensions;
 using HyperLapse.Bibim.Service.Discord.Extensions;
-using HyperLapse.Bibim.Service.YouTube;
+using HyperLapse.Bibim.Service.YouTube.Extensions;
+using HyperLapse.Bibim.Service.YoutubeDL.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,7 @@ builder.Services.Configure<DiscordOptions>(builder.Configuration.GetSection(Disc
 
 // Add services to the container.
 builder.Services
+    .AddYoutubeDL()
     .AddDiscord()
     .AddYouTube()
     .AddAudioQueue()
