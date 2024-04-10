@@ -3,6 +3,7 @@ using CliWrap;
 using Discord;
 using Discord.Audio;
 using HyperLapse.Bibim.Service.Abstractions.Interfaces;
+using HyperLapse.Bibim.Service.Discord.Models;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -11,23 +12,28 @@ namespace HyperLapse.Bibim.Service.Discord.Services;
 internal class DiscordAudioBackgroundService(
     IVoiceChannel channel,
     IAudioQueueService queueService,
-    ILogger logger
+    ILogger logger,
+    DiscordServiceOptions options
 ) : BackgroundService
 {
-    internal bool IsRunning { get; private set; }
+    private IAudioClient _audioClient = null!;
+    private Stream _audioStream = null!;
+
+    public override async Task StartAsync(CancellationToken cancellationToken)
+    {
+        _audioClient = await channel.ConnectAsync();
+
+        // Create Audio Stream (macOS is not supported)
+        _audioStream = OperatingSystem.IsMacOS()
+            ? new MemoryStream()
+            : _audioClient.CreatePCMStream(AudioApplication.Music, null, 1000, 20);
+        await base.StartAsync(cancellationToken);
+    }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        IsRunning = true;
-        using var audioClient = await channel.ConnectAsync();
-
         try
         {
-            // Create Audio Stream (macOS is not supported)
-            await using Stream audioStream = OperatingSystem.IsMacOS()
-                ? new MemoryStream()
-                : audioClient.CreatePCMStream(AudioApplication.Music, null, 1000, 20);
-
             while (true)
             {
                 if (stoppingToken.IsCancellationRequested) break;
@@ -42,7 +48,8 @@ internal class DiscordAudioBackgroundService(
 
                     var msg = await channel.SendMessageAsync($"Loading `{item.DisplayName}`...");
 
-                    await using var stream = await item.GetAudioStreamAsync(stoppingToken);
+                    var (rawPipe, task) = await item.GetAudioPipeAsync(stoppingToken);
+                    await using var rawPipeReaderStream = rawPipe.Reader.AsStream();
 
                     if (OperatingSystem.IsMacOS())
                     {
@@ -62,18 +69,18 @@ internal class DiscordAudioBackgroundService(
                     await using var writeStream = writer.AsStream();
 
                     var reader = pipe.Reader;
-                    _ = reader.CopyToAsync(audioStream, stoppingToken);
+                    var t1 = reader.CopyToAsync(_audioStream, stoppingToken);
 
-                    await Cli.Wrap("ffmpeg")
+                    var t2 = Cli.Wrap(options.FfmpegPath)
                         .WithArguments(
                             "-hide_banner -i pipe:0 -af loudnorm=I=-36:TP=-2:LRA=7:print_format=json -ac 2 -f s16le -ar 48000 pipe:1"
                         )
-                        .WithStandardInputPipe(PipeSource.FromStream(stream))
+                        .WithStandardInputPipe(PipeSource.FromStream(rawPipeReaderStream))
                         .WithStandardOutputPipe(PipeTarget.ToStream(writeStream))
                         .WithStandardErrorPipe(PipeTarget.ToDelegate(e => logger.LogInformation("{message}", e)))
                         .ExecuteAsync(stoppingToken);
 
-                    // await Task.WhenAll(t1, t2);
+                    await Task.WhenAll(t1, t2, task);
                 }
                 catch (TaskCanceledException)
                 {
@@ -87,9 +94,12 @@ internal class DiscordAudioBackgroundService(
             logger.LogError(e, "");
             throw;
         }
-        finally
-        {
-            IsRunning = false;
-        }
+    }
+
+    public override void Dispose()
+    {
+        _audioStream.Dispose();
+        _audioClient.Dispose();
+        base.Dispose();
     }
 }

@@ -1,6 +1,6 @@
 using Discord;
 using Discord.Interactions;
-using HyperLapse.Bibim.Service.Discord.Services;
+using HyperLapse.Bibim.Service.Abstractions.Interfaces;
 using HyperLapse.Bibim.Service.YouTube.Services;
 
 namespace Bibim.Groups;
@@ -8,7 +8,7 @@ namespace Bibim.Groups;
 [Group("youtube", "YouTube")]
 public class YouTubeGroup(
     ILogger<SoundcloudModule> logger,
-    DiscordAudioService audioService,
+    IDiscordAudioService audioService,
     YouTubeAudioQueueService youTubeAudioQueueService
 )
     : InteractionModuleBase<SocketInteractionContext>

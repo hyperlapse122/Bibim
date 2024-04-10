@@ -1,9 +1,6 @@
 using Discord;
 using Discord.Interactions;
 using HyperLapse.Bibim.Service.Abstractions.Interfaces;
-using HyperLapse.Bibim.Service.Discord.Services;
-using HyperLapse.Bibim.Service.YouTube.Services;
-using HyperLapse.Bibim.Service.YoutubeDL.Service;
 
 namespace Bibim.Services;
 

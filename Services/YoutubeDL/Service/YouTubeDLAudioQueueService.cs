@@ -5,10 +5,11 @@ using YoutubeDLSharp.Metadata;
 
 namespace HyperLapse.Bibim.Service.YoutubeDL.Service;
 
-public class YouTubeDLAudioQueueService(
+internal class YouTubeDLAudioQueueService(
     YoutubeDLSharp.YoutubeDL client,
     IAudioQueueService audioQueueService,
-    ILogger<YouTubeDLAudioQueueService> logger)
+    ILogger<YouTubeDLAudioQueueService> logger,
+    YouTubeDLOptions options) : IYouTubeDLAudioQueueService
 {
     public async Task<IAudioQueueItem> EnqueueAsync(
         ulong channelId,
@@ -19,15 +20,15 @@ public class YouTubeDLAudioQueueService(
     {
         var res = await client.RunVideoDataFetch(url, cancellationToken);
 // get some video information
-        VideoData video = res.Data;
-        string title = video.Title;
-        string uploader = video.Uploader;
-        long? views = video.ViewCount;
+        var video = res.Data;
+        var title = video.Title;
+        var uploader = video.Uploader;
+        var views = video.ViewCount;
 // all available download formats
         FormatData[] formats = video.Formats;
 // ...
 
-        var item = new YouTubeDLAudioQueueItem(client: client, url: url, logger: logger)
+        var item = new YouTubeDLAudioQueueItem(options, url, logger)
         {
             SourceDisplayName = "YoutubeDL",
             DisplayName = title,

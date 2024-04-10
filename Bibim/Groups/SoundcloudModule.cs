@@ -1,7 +1,6 @@
 using Discord;
 using Discord.Interactions;
-using HyperLapse.Bibim.Service.Discord.Services;
-using HyperLapse.Bibim.Service.YoutubeDL.Service;
+using HyperLapse.Bibim.Service.Abstractions.Interfaces;
 
 namespace Bibim.Groups;
 
@@ -9,8 +8,8 @@ namespace Bibim.Groups;
 [Group("soundcloud", "Soundcloud")]
 public class SoundcloudModule(
     ILogger<SoundcloudModule> logger,
-    DiscordAudioService audioService,
-    YouTubeDLAudioQueueService youTubeDlAudioQueueService
+    IDiscordAudioService audioService,
+    IYouTubeDLAudioQueueService youTubeDlAudioQueueService
 )
     : InteractionModuleBase<SocketInteractionContext>
 {
@@ -28,12 +27,12 @@ public class SoundcloudModule(
 
         try
         {
+            await RespondAsync(
+                "Soundcloud Audio has been added to the queue. It will be played soon."
+            );
             var item = await youTubeDlAudioQueueService.EnqueueAsync(channel.Id, link);
 
             audioService.EnsureAudioServiceCreated(channel);
-            await RespondAsync(
-                $"Soundcloud Audio `{item.DisplayName}` has been added to the queue. It will be played soon."
-            );
         }
         catch (Exception e)
         {

@@ -4,17 +4,22 @@ using HyperLapse.Bibim.Service.AudioQueue.Extensions;
 using HyperLapse.Bibim.Service.Discord.Extensions;
 using HyperLapse.Bibim.Service.YouTube.Extensions;
 using HyperLapse.Bibim.Service.YoutubeDL.Extensions;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure the services
 builder.Services.Configure<DiscordOptions>(builder.Configuration.GetSection(DiscordOptions.SectionName));
+builder.Services.Configure<CliOptions>(builder.Configuration.GetSection(CliOptions.SectionName));
 
 // Add services to the container.
 builder.Services
-    .AddYoutubeDL()
-    .AddDiscord()
     .AddYouTube()
+    .AddYoutubeDL(
+        sp => sp.GetRequiredService<IOptions<CliOptions>>().Value.YoutubeDlPath,
+        sp => sp.GetRequiredService<IOptions<CliOptions>>().Value.FfmpegPath
+    )
+    .AddDiscord(sp => sp.GetRequiredService<IOptions<CliOptions>>().Value.FfmpegPath)
     .AddAudioQueue()
     .AddDiscordClient();
 

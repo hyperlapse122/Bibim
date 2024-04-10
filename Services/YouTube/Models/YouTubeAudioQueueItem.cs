@@ -1,3 +1,4 @@
+using System.IO.Pipelines;
 using HyperLapse.Bibim.Service.Abstractions.EventArgs;
 using HyperLapse.Bibim.Service.Abstractions.Interfaces;
 using YoutubeExplode;
@@ -19,11 +20,18 @@ internal class YouTubeAudioQueueItem(
     public CancellationToken CancellationToken { get; } = cancellationToken;
     public TaskCompletionSource? TaskCompletionSource { get; } = taskCompletionSource;
 
-    public async Task<Stream> GetAudioStreamAsync(CancellationToken cancellationToken)
+    public async Task<(Pipe, Task)> GetAudioPipeAsync(CancellationToken cancellationToken)
     {
+        var pipe = new Pipe();
+
         var manifest = await client.Videos.Streams.GetManifestAsync(video.Id, cancellationToken);
         var streamInfo = manifest.GetAudioOnlyStreams().GetWithHighestBitrate();
         var stream = await client.Videos.Streams.GetAsync(streamInfo, cancellationToken);
-        return stream;
+        var task = Task.Run(async () =>
+        {
+            await using var writeStream = pipe.Writer.AsStream();
+            await stream.CopyToAsync(writeStream, cancellationToken);
+        }, cancellationToken);
+        return (pipe, task);
     }
 }
