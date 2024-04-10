@@ -5,16 +5,15 @@ using HyperLapse.Bibim.Service.Abstractions.Interfaces;
 namespace Bibim.Groups;
 
 // You can put commands in groups
-[Group("soundcloud", "Soundcloud")]
-public class SoundcloudModule(
-    ILogger<SoundcloudModule> logger,
+[Group("music", "Music")]
+public class AudioModule(
+    ILogger<AudioModule> logger,
     IDiscordAudioService audioService,
     IYouTubeDLAudioQueueService youTubeDlAudioQueueService
 )
     : InteractionModuleBase<SocketInteractionContext>
 {
-    // The command's Run Mode MUST be set to RunMode.Async, otherwise, being connected to a voice channel will block the gateway thread.
-    [SlashCommand("sc", "Play Soundcloud audio", runMode: RunMode.Async, ignoreGroupNames: true)]
+    [SlashCommand("play", "Play audio", runMode: RunMode.Async, ignoreGroupNames: true)]
     public async Task EnqueueLink(string link)
     {
         if ((Context.User as IGuildUser)?.VoiceChannel is not { } channel)
@@ -28,9 +27,10 @@ public class SoundcloudModule(
         try
         {
             await RespondAsync(
-                "Soundcloud Audio has been added to the queue. It will be played soon."
+                "Audio has been added to the queue. It will be played soon."
             );
             var item = await youTubeDlAudioQueueService.EnqueueAsync(channel.Id, link);
+            await channel.SendMessageAsync($"Queued Item: `{item.DisplayName}`...");
 
             audioService.EnsureAudioServiceCreated(channel);
         }

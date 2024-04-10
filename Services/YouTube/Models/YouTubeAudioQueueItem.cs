@@ -20,18 +20,12 @@ internal class YouTubeAudioQueueItem(
     public CancellationToken CancellationToken { get; } = cancellationToken;
     public TaskCompletionSource? TaskCompletionSource { get; } = taskCompletionSource;
 
-    public async Task<(Pipe, Task)> GetAudioPipeAsync(CancellationToken cancellationToken)
+    public async Task GetAudioPipeAsync(PipeWriter writer, CancellationToken cancellationToken)
     {
-        var pipe = new Pipe();
-
         var manifest = await client.Videos.Streams.GetManifestAsync(video.Id, cancellationToken);
         var streamInfo = manifest.GetAudioOnlyStreams().GetWithHighestBitrate();
         var stream = await client.Videos.Streams.GetAsync(streamInfo, cancellationToken);
-        var task = Task.Run(async () =>
-        {
-            await using var writeStream = pipe.Writer.AsStream();
-            await stream.CopyToAsync(writeStream, cancellationToken);
-        }, cancellationToken);
-        return (pipe, task);
+        var writeStream = writer.AsStream();
+        await stream.CopyToAsync(writeStream, cancellationToken);
     }
 }

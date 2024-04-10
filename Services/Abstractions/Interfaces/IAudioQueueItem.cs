@@ -11,5 +11,5 @@ public interface IAudioQueueItem
     public TaskCompletionSource? TaskCompletionSource { get; }
     public event EventHandler<AudioQueueItemStateChangedEventArgs>? StateChanged;
 
-    public Task<(Pipe, Task)> GetAudioPipeAsync(CancellationToken cancellationToken);
+    public Task GetAudioPipeAsync(PipeWriter writer,CancellationToken cancellationToken);
 }

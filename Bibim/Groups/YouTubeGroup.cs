@@ -7,7 +7,7 @@ namespace Bibim.Groups;
 
 [Group("youtube", "YouTube")]
 public class YouTubeGroup(
-    ILogger<SoundcloudModule> logger,
+    ILogger<AudioModule> logger,
     IDiscordAudioService audioService,
     YouTubeAudioQueueService youTubeAudioQueueService
 )

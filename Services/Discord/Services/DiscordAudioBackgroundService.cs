@@ -48,9 +48,6 @@ internal class DiscordAudioBackgroundService(
 
                     var msg = await channel.SendMessageAsync($"Loading `{item.DisplayName}`...");
 
-                    var (rawPipe, task) = await item.GetAudioPipeAsync(stoppingToken);
-                    await using var rawPipeReaderStream = rawPipe.Reader.AsStream();
-
                     if (OperatingSystem.IsMacOS())
                     {
                         const string t = "macOS is not supported. Skipping playing and waiting 10 seconds.";
@@ -62,14 +59,15 @@ internal class DiscordAudioBackgroundService(
 
                     await channel.ModifyMessageAsync(msg.Id, x => x.Content = $"Playing `{item.DisplayName}`...");
 
-                    await using var bufferStream = new MemoryStream();
+                    var rawPipe = new Pipe();
+                    var rawWriter = rawPipe.Writer;
+                    await using var rawPipeReaderStream = rawPipe.Reader.AsStream();
+
+                    var task = item.GetAudioPipeAsync(rawWriter, stoppingToken);
 
                     var pipe = new Pipe();
                     var writer = pipe.Writer;
                     await using var writeStream = writer.AsStream();
-
-                    var reader = pipe.Reader;
-                    var t1 = reader.CopyToAsync(_audioStream, stoppingToken);
 
                     var t2 = Cli.Wrap(options.FfmpegPath)
                         .WithArguments(
@@ -80,7 +78,10 @@ internal class DiscordAudioBackgroundService(
                         .WithStandardErrorPipe(PipeTarget.ToDelegate(e => logger.LogInformation("{message}", e)))
                         .ExecuteAsync(stoppingToken);
 
-                    await Task.WhenAll(t1, t2, task);
+                    var reader = pipe.Reader;
+                    _ = reader.CopyToAsync(_audioStream, stoppingToken);
+                    await task;
+                    await t2;
                 }
                 catch (TaskCanceledException)
                 {

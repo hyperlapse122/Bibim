@@ -15,23 +15,15 @@ internal class YouTubeDLAudioQueueItem(YouTubeDLOptions options, string url, ILo
     public TaskCompletionSource? TaskCompletionSource { get; internal set; }
     public event EventHandler<AudioQueueItemStateChangedEventArgs>? StateChanged;
 
-    public async Task<(Pipe, Task)> GetAudioPipeAsync(CancellationToken cancellationToken)
+    public async Task GetAudioPipeAsync(PipeWriter writer,CancellationToken cancellationToken)
     {
-        var pipe = new Pipe();
-        var writer = pipe.Writer;
-        var task = Task.Run(async () =>
-        {
-            await using var writeStream = writer.AsStream();
+        await using var writeStream = writer.AsStream();
 
-            await Cli.Wrap(options.YoutubeDLPath)
-                .WithArguments(
-                    $"\"{url}\" -o -"
-                )
-                .WithStandardOutputPipe(PipeTarget.ToStream(writeStream))
-                .WithStandardErrorPipe(PipeTarget.ToDelegate(e => logger.LogInformation("{message}", e)))
-                .WithValidation(CommandResultValidation.ZeroExitCode)
-                .ExecuteAsync(cancellationToken);
-        }, cancellationToken);
-        return (pipe, task);
+        await Cli.Wrap(options.YoutubeDLPath)
+            .WithArguments($"\"{url}\" -o -")
+            .WithStandardOutputPipe(PipeTarget.ToStream(writeStream))
+            .WithStandardErrorPipe(PipeTarget.ToDelegate(e => logger.LogInformation("{message}", e)))
+            .WithValidation(CommandResultValidation.ZeroExitCode)
+            .ExecuteAsync(cancellationToken);
     }
 }

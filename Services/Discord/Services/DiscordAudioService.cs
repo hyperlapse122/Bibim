@@ -33,7 +33,7 @@ internal class DiscordAudioService(
         if (_backgroundServices.TryGetValue(channel.Id, out var service)) return service;
 
         service = new DiscordAudioBackgroundService(channel, queueService, logger, options);
-        Task.Run(async () => { await service.StartAsync(cancellationToken); }, cancellationToken);
+        _ = service.StartAsync(cancellationToken);
         _backgroundServices[channel.Id] = service;
 
         return service;
