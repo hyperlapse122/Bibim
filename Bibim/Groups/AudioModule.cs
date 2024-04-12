@@ -10,8 +10,7 @@ public class AudioModule(
     ILogger<AudioModule> logger,
     IDiscordAudioService audioService,
     IYouTubeDLAudioQueueService youTubeDlAudioQueueService
-)
-    : InteractionModuleBase<SocketInteractionContext>
+) : InteractionModuleBase<SocketInteractionContext>
 {
     [SlashCommand("play", "Play audio", runMode: RunMode.Async, ignoreGroupNames: true)]
     public async Task EnqueueLink(string link)

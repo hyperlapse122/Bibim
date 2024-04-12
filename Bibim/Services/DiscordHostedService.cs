@@ -21,6 +21,7 @@ public class DiscordHostedService(
 
         client.Ready += OnClientReady;
         client.Log += OnClientLog;
+        interactionService.Log += OnClientLog;
         client.InteractionCreated += OnClientOnInteractionCreated;
 
         await client.LoginAsync(TokenType.Bot, token);
@@ -54,11 +55,12 @@ public class DiscordHostedService(
     {
         try
         {
-            var modules = (await interactionService.AddModulesAsync(typeof(AudioModule).Assembly, serviceProvider))
-                .ToList();
-            await interactionService.RegisterCommandsGloballyAsync();
+            await interactionService.AddModuleAsync<AudioModule>(serviceProvider);
 #if DEBUG
-            // await interactionService.RegisterCommandsToGuildAsync(1063275431287070725);
+            foreach (var guild in client.Guilds)
+            {
+                await interactionService.RegisterCommandsToGuildAsync(guild.Id);
+            }
 #else
             await interactionService.RegisterCommandsGloballyAsync();
 #endif
