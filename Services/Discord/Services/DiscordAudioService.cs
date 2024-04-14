@@ -1,13 +1,32 @@
 using Discord;
 using HyperLapse.Bibim.Service.Abstractions.Interfaces;
-using Microsoft.Extensions.Hosting;
+using HyperLapse.Bibim.Service.Discord.Models;
 using Microsoft.Extensions.Logging;
 
 namespace HyperLapse.Bibim.Service.Discord.Services;
 
-public class DiscordAudioService(ILogger<DiscordAudioService> logger, IAudioQueueService queueService) : IHostedService
+internal class DiscordAudioService(
+    ILogger<DiscordAudioService> logger,
+    IAudioQueueService queueService,
+    DiscordServiceOptions options) : IDiscordAudioService
 {
     private readonly Dictionary<ulong, DiscordAudioBackgroundService> _backgroundServices = new();
+
+    public void EnsureAudioServiceCreated(IVoiceChannel channel, CancellationToken cancellationToken = default)
+    {
+        Task.Run(async () =>
+        {
+            var service = GetService(channel, cancellationToken);
+            await service.StartAsync(cancellationToken);
+        }, cancellationToken);
+    }
+
+    public void StopAudioService(IVoiceChannel channel, CancellationToken cancellationToken = default)
+    {
+        if (!_backgroundServices.TryGetValue(channel.Id, out var service)) throw new Exception("Service not found.");
+        service.Dispose();
+        _backgroundServices.Remove(channel.Id);
+    }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
@@ -22,17 +41,11 @@ public class DiscordAudioService(ILogger<DiscordAudioService> logger, IAudioQueu
     private DiscordAudioBackgroundService GetService(IVoiceChannel channel,
         CancellationToken cancellationToken = default)
     {
-        if (_backgroundServices.TryGetValue(channel.Id, out var service) && service.IsRunning) return service;
+        if (_backgroundServices.TryGetValue(channel.Id, out var service)) return service;
 
-        service = new DiscordAudioBackgroundService(channel, queueService, logger);
-        service.StartAsync(cancellationToken);
+        service = new DiscordAudioBackgroundService(channel, queueService, logger, options);
         _backgroundServices[channel.Id] = service;
 
         return service;
-    }
-
-    public void EnsureAudioServiceCreated(IVoiceChannel channel, CancellationToken cancellationToken = default)
-    {
-        GetService(channel, cancellationToken);
     }
 }

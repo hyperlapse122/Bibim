@@ -1,3 +1,4 @@
+using System.IO.Pipelines;
 using CliWrap;
 using HyperLapse.Bibim.Service.Abstractions.EventArgs;
 using HyperLapse.Bibim.Service.Abstractions.Interfaces;
@@ -5,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace HyperLapse.Bibim.Service.YoutubeDL.Models;
 
-internal class YouTubeDLAudioQueueItem(YoutubeDLSharp.YoutubeDL client, string url, ILogger logger)
+internal class YouTubeDLAudioQueueItem(YouTubeDLOptions options, string url, ILogger logger)
     : IAudioQueueItem
 {
     public required string SourceDisplayName { get; internal set; }
@@ -14,18 +15,15 @@ internal class YouTubeDLAudioQueueItem(YoutubeDLSharp.YoutubeDL client, string u
     public TaskCompletionSource? TaskCompletionSource { get; internal set; }
     public event EventHandler<AudioQueueItemStateChangedEventArgs>? StateChanged;
 
-    public async Task<Stream> GetAudioStreamAsync(CancellationToken cancellationToken)
+    public async Task GetAudioPipeAsync(PipeWriter writer, CancellationToken cancellationToken)
     {
-        var memoryStream = new MemoryStream();
+        await using var writeStream = writer.AsStream();
 
-        await Cli.Wrap("yt-dlp")
-            .WithArguments(
-                $"\"{url}\" -o -"
-            )
-            .WithStandardOutputPipe(PipeTarget.ToStream(memoryStream))
+        await Cli.Wrap(options.YoutubeDLPath)
+            .WithArguments($"\"{url}\" -o -")
+            .WithStandardOutputPipe(PipeTarget.ToStream(writeStream))
             .WithStandardErrorPipe(PipeTarget.ToDelegate(e => logger.LogInformation("{message}", e)))
+            .WithValidation(CommandResultValidation.ZeroExitCode)
             .ExecuteAsync(cancellationToken);
-        memoryStream.Seek(0, SeekOrigin.Begin);
-        return memoryStream;
     }
 }

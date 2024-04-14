@@ -1,3 +1,4 @@
+using System.IO.Pipelines;
 using HyperLapse.Bibim.Service.Abstractions.EventArgs;
 
 namespace HyperLapse.Bibim.Service.Abstractions.Interfaces;
@@ -10,10 +11,5 @@ public interface IAudioQueueItem
     public TaskCompletionSource? TaskCompletionSource { get; }
     public event EventHandler<AudioQueueItemStateChangedEventArgs>? StateChanged;
 
-    /// <summary>
-    ///     Returns the audio stream with any format that ffmpeg can play.
-    /// </summary>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    public Task<Stream> GetAudioStreamAsync(CancellationToken cancellationToken);
+    public Task GetAudioPipeAsync(PipeWriter writer, CancellationToken cancellationToken);
 }

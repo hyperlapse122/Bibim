@@ -21,6 +21,7 @@ public class DiscordHostedService(
 
         client.Ready += OnClientReady;
         client.Log += OnClientLog;
+        interactionService.Log += OnClientLog;
         client.InteractionCreated += OnClientOnInteractionCreated;
 
         await client.LoginAsync(TokenType.Bot, token);
@@ -54,12 +55,9 @@ public class DiscordHostedService(
     {
         try
         {
-            var module1 = await interactionService.AddModuleAsync<CommandGroupModule>(serviceProvider);
-            var module2 = await interactionService.AddModuleAsync<YouTubeGroup>(serviceProvider);
-            var module3 = await interactionService.AddModuleAsync<SoundcloudModule>(serviceProvider);
-            await interactionService.AddModulesGloballyAsync(false, module1, module2, module3);
+            await interactionService.AddModuleAsync<AudioModule>(serviceProvider);
 #if DEBUG
-            await interactionService.RegisterCommandsToGuildAsync(1066307284822659072);
+            foreach (var guild in client.Guilds) await interactionService.RegisterCommandsToGuildAsync(guild.Id);
 #else
             await interactionService.RegisterCommandsGloballyAsync();
 #endif
