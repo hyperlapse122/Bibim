@@ -57,10 +57,7 @@ public class DiscordHostedService(
         {
             await interactionService.AddModuleAsync<AudioModule>(serviceProvider);
 #if DEBUG
-            foreach (var guild in client.Guilds)
-            {
-                await interactionService.RegisterCommandsToGuildAsync(guild.Id);
-            }
+            foreach (var guild in client.Guilds) await interactionService.RegisterCommandsToGuildAsync(guild.Id);
 #else
             await interactionService.RegisterCommandsGloballyAsync();
 #endif

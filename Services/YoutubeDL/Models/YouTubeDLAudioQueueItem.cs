@@ -15,7 +15,7 @@ internal class YouTubeDLAudioQueueItem(YouTubeDLOptions options, string url, ILo
     public TaskCompletionSource? TaskCompletionSource { get; internal set; }
     public event EventHandler<AudioQueueItemStateChangedEventArgs>? StateChanged;
 
-    public async Task GetAudioPipeAsync(PipeWriter writer,CancellationToken cancellationToken)
+    public async Task GetAudioPipeAsync(PipeWriter writer, CancellationToken cancellationToken)
     {
         await using var writeStream = writer.AsStream();
 

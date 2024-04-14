@@ -6,4 +6,5 @@ namespace HyperLapse.Bibim.Service.Abstractions.Interfaces;
 public interface IDiscordAudioService : IHostedService
 {
     public void EnsureAudioServiceCreated(IVoiceChannel channel, CancellationToken cancellationToken = default);
+    public void StopAudioService(IVoiceChannel channel, CancellationToken cancellationToken = default);
 }

@@ -14,7 +14,18 @@ internal class DiscordAudioService(
 
     public void EnsureAudioServiceCreated(IVoiceChannel channel, CancellationToken cancellationToken = default)
     {
-        GetService(channel, cancellationToken);
+        Task.Run(async () =>
+        {
+            var service = GetService(channel, cancellationToken);
+            await service.StartAsync(cancellationToken);
+        }, cancellationToken);
+    }
+
+    public void StopAudioService(IVoiceChannel channel, CancellationToken cancellationToken = default)
+    {
+        if (!_backgroundServices.TryGetValue(channel.Id, out var service)) throw new Exception("Service not found.");
+        service.Dispose();
+        _backgroundServices.Remove(channel.Id);
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -33,7 +44,6 @@ internal class DiscordAudioService(
         if (_backgroundServices.TryGetValue(channel.Id, out var service)) return service;
 
         service = new DiscordAudioBackgroundService(channel, queueService, logger, options);
-        _ = service.StartAsync(cancellationToken);
         _backgroundServices[channel.Id] = service;
 
         return service;
