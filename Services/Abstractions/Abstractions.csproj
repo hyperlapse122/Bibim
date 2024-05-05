@@ -8,12 +8,13 @@
         <AssemblyName>HyperLapse.Bibim.Service.Abstractions</AssemblyName>
         <RootNamespace>HyperLapse.Bibim.Service.Abstractions</RootNamespace>
         <IsPackable>false</IsPackable>
+        <Platforms>x64</Platforms>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Discord.Net.Core" Version="3.14.1"/>
-        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0"/>
-        <PackageReference Include="System.IO.Pipelines" Version="8.0.0"/>
+        <PackageReference Include="Discord.Net.Core" Version="3.14.1" />
+        <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
+        <PackageReference Include="System.IO.Pipelines" Version="8.0.0" />
     </ItemGroup>
 
 </Project>

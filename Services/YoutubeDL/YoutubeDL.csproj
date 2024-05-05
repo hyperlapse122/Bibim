@@ -7,17 +7,18 @@
         <Nullable>enable</Nullable>
         <AssemblyName>HyperLapse.Bibim.Service.YoutubeDL</AssemblyName>
         <RootNamespace>HyperLapse.Bibim.Service.YoutubeDL</RootNamespace>
+        <Platforms>x64</Platforms>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Abstractions\Abstractions.csproj"/>
+        <ProjectReference Include="..\Abstractions\Abstractions.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="CliWrap" Version="3.6.6"/>
+        <PackageReference Include="CliWrap" Version="3.6.6" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.1" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
-        <PackageReference Include="YoutubeDLSharp" Version="1.1.0"/>
+        <PackageReference Include="YoutubeDLSharp" Version="1.1.0" />
     </ItemGroup>
 
 </Project>

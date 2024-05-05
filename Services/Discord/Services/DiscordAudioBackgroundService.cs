@@ -27,6 +27,7 @@ internal class DiscordAudioBackgroundService(
         _audioStream = OperatingSystem.IsMacOS()
             ? new MemoryStream()
             : _audioClient.CreatePCMStream(AudioApplication.Music, null, 1000, 20);
+
         await base.StartAsync(cancellationToken);
     }
 
@@ -61,9 +62,10 @@ internal class DiscordAudioBackgroundService(
 
                     var rawPipe = new Pipe();
                     var rawWriter = rawPipe.Writer;
-                    await using var rawPipeReaderStream = rawPipe.Reader.AsStream();
+                    var rawReader = rawPipe.Reader;
+                    await using var rawPipeReaderStream = rawReader.AsStream();
 
-                    var task = item.GetAudioPipeAsync(rawWriter, stoppingToken);
+                    var t1 = item.GetAudioPipeAsync(rawWriter, stoppingToken);
 
                     var pipe = new Pipe();
                     var writer = pipe.Writer;
@@ -79,9 +81,9 @@ internal class DiscordAudioBackgroundService(
                         .ExecuteAsync(stoppingToken);
 
                     var reader = pipe.Reader;
-                    _ = reader.CopyToAsync(_audioStream, stoppingToken);
-                    await task;
-                    await t2;
+                    var t3 = reader.CopyToAsync(_audioStream, stoppingToken);
+
+                    await Task.WhenAll(t1, t2, t3);
                 }
                 catch (TaskCanceledException)
                 {

@@ -45,7 +45,7 @@ public class AudioModule(
     }
 
     [SlashCommand("stop", "Stop audio and leave", runMode: RunMode.Async, ignoreGroupNames: true)]
-    public async Task Stop(string link)
+    public async Task Stop()
     {
         if ((Context.User as IGuildUser)?.VoiceChannel is not { } channel)
         {
@@ -61,8 +61,9 @@ public class AudioModule(
 
             audioService.StopAudioService(channel);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            logger.LogError(ex, "");
             await RespondAsync("Ensure you are in voice channel that `Bibim` can see");
         }
     }

@@ -10,13 +10,15 @@ internal class AudioQueueService : IAudioQueueService
     private readonly BoundedChannelOptions _options = new(100)
     {
         SingleReader = true,
-        SingleWriter = false,
+        SingleWriter = true,
         FullMode = BoundedChannelFullMode.Wait
     };
 
     public async Task EnqueueAsync(ulong channelId, IAudioQueueItem item, CancellationToken cancellationToken = default)
     {
-        await GetChannel(channelId).Writer.WriteAsync(item, cancellationToken);
+        var channel = GetChannel(channelId);
+        var channelWriter = channel.Writer;
+        await channelWriter.WriteAsync(item, cancellationToken);
     }
 
     public Task<IAudioQueueItem?> PeekAsync(ulong channelId, CancellationToken cancellationToken = default)
